@@ -47,7 +47,7 @@ export async function identifyCelebrity(base64Image: string, mimeType: string): 
               },
             },
             {
-              text: "IDENTIFY target in photo. respond in JSON. BE CONCISE. include: net worth, age, birthDate, top works (year included), fun facts, recent news, 3 similar celebs. if no star found, return null fields.",
+              text: "Act as a world-class celebrity and public figure identification expert. Your task is to identify the person in the image. They are likely a famous actor, athlete, musician, or public figure. Analyze the facial features and context carefully. You MUST try your absolute best to identify them. Provide a comprehensive profile in JSON format. If you identify the person accurately, fill out all fields. Only if you are completely certain that the person is not a public figure, set the 'name' to 'Unknown'.",
             },
           ],
         },

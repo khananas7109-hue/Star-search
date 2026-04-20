@@ -114,11 +114,11 @@ export default function App() {
     
     try {
       const result = await identifyCelebrity(base64, mimeType);
-      if (result) {
+      if (result && result.name !== 'Unknown') {
         setProfile(result);
         saveHistory(result);
       } else {
-        setError("Identification failed: target not found in public registry.");
+        setError("Identification failed. Please ensure the person is a public figure and the photo is clear.");
       }
     } catch (err) {
       setError("System override: data processing error.");

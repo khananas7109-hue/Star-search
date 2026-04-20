@@ -48,8 +48,8 @@ export function UploadSection({ onUpload, isLoading }: UploadSectionProps) {
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800; // Smaller for speed
-            const MAX_HEIGHT = 800;
+            const MAX_WIDTH = 1024; // Balanced for speed and detail
+            const MAX_HEIGHT = 1024;
             let width = img.width;
             let height = img.height;
 
@@ -68,7 +68,7 @@ export function UploadSection({ onUpload, isLoading }: UploadSectionProps) {
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx?.drawImage(img, 0, 0, width, height);
-            const base64 = canvas.toDataURL('image/jpeg', 0.6); // Lower quality for even more speed
+            const base64 = canvas.toDataURL('image/jpeg', 0.8); // High enough quality for AI
             resolve({ base64, mime: 'image/jpeg' });
           };
           img.src = e.target?.result as string;
