@@ -1,6 +1,17 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let genAI: GoogleGenAI | null = null;
+
+function getAI() {
+  if (!genAI) {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) {
+      throw new Error("Target identification module offline: GEMINI_API_KEY omitted.");
+    }
+    genAI = new GoogleGenAI({ apiKey: key });
+  }
+  return genAI;
+}
 
 export interface StarProfile {
   name: string;
@@ -23,6 +34,7 @@ export interface StarProfile {
 
 export async function identifyCelebrity(base64Image: string, mimeType: string): Promise<StarProfile | null> {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [
@@ -35,7 +47,7 @@ export async function identifyCelebrity(base64Image: string, mimeType: string): 
               },
             },
             {
-              text: "Identify the celebrity or influencer in this photo and provide their comprehensive profile details. If no famous person is found, return an error or null equivalent within the schema. Include: net worth, age, birthdate, notable works (movies/songs) with years, fun facts, recent news, and 3-4 similar celebrities with a reason for the comparison.",
+              text: "IDENTIFY target in photo. respond in JSON. BE CONCISE. include: net worth, age, birthDate, top works (year included), fun facts, recent news, 3 similar celebs. if no star found, return null fields.",
             },
           ],
         },

@@ -1,4 +1,4 @@
-import { useState, useCallback, DragEvent, ChangeEvent } from 'react';
+import { useState, useCallback, useEffect, DragEvent, ChangeEvent } from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -12,17 +12,74 @@ export function UploadSection({ onUpload, isLoading }: UploadSectionProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleFileChange = useCallback((file: File) => {
-    if (!file.type.startsWith('image/')) return;
+  const [progress, setProgress] = useState(0);
 
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isLoading) {
+      setProgress(0);
+      interval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 95) return prev;
+          // Faster initial jump, then slows down
+          const increment = prev < 50 ? 5 : prev < 80 ? 2 : 0.5;
+          return prev + increment;
+        });
+      }, 100);
+    } else {
+      setProgress(0);
+    }
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
+  const handleFileChange = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    
+    // Instant feedback: set preview first
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target?.result as string;
-      setPreview(base64);
-      const base64Data = base64.split(',')[1];
-      onUpload(base64Data, file.type);
-    };
+    reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
+
+    // Fast resize helper
+    const resizeImage = (file: File): Promise<{ base64: string, mime: string }> => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800; // Smaller for speed
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            const base64 = canvas.toDataURL('image/jpeg', 0.6); // Lower quality for even more speed
+            resolve({ base64, mime: 'image/jpeg' });
+          };
+          img.src = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+
+    const { base64, mime } = await resizeImage(file);
+    const base64Data = base64.split(',')[1];
+    onUpload(base64Data, mime);
   }, [onUpload]);
 
   const onDrop = (e: DragEvent) => {
@@ -102,7 +159,26 @@ export function UploadSection({ onUpload, isLoading }: UploadSectionProps) {
               {/* Scanline Effect */}
               <div className="scanline pointer-events-none" />
 
-              <div className="absolute bottom-4 left-4 flex gap-2 items-center bg-black/40 backdrop-blur-md p-2 px-3 rounded-xl border border-white/10">
+              {/* Progress UI */}
+              {isLoading && (
+                <div className="absolute inset-x-8 bottom-20 z-20 space-y-3">
+                  <div className="flex justify-between items-end">
+                    <span className="text-[10px] text-violet-400 font-mono tracking-widest uppercase">Target Analysis</span>
+                    <span className="text-xl font-bold text-white font-mono">{Math.round(progress)}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+                    <motion.div 
+                      className="h-full bg-violet-600 shadow-[0_0_15px_rgba(139,92,246,0.6)]"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ type: 'spring', damping: 15, stiffness: 40 }}
+                    />
+                  </div>
+                  <p className="text-[8px] text-zinc-500 uppercase tracking-[0.3em] animate-pulse">Synchronizing with Satellite Registry...</p>
+                </div>
+              )}
+
+              <div className="absolute bottom-4 left-4 flex gap-2 items-center bg-black/40 backdrop-blur-md p-2 px-3 rounded-xl border border-white/10 z-20">
                 <div className={cn(
                   "w-2 h-2 rounded-full",
                   isLoading ? "bg-amber-500 animate-pulse" : "bg-green-500"
@@ -111,7 +187,7 @@ export function UploadSection({ onUpload, isLoading }: UploadSectionProps) {
                   "text-[10px] font-mono uppercase tracking-[0.2em]",
                   isLoading ? "text-amber-400" : "text-green-400"
                 )}>
-                  {isLoading ? "Searching Database..." : "Identification Complete 98.4%"}
+                  {isLoading ? "Analyzing..." : "Target Identified"}
                 </span>
               </div>
               
@@ -127,7 +203,18 @@ export function UploadSection({ onUpload, isLoading }: UploadSectionProps) {
 
             <div className="glass p-4 rounded-2xl flex items-center justify-between">
               <div className="text-[10px] text-zinc-400 uppercase tracking-[0.2em]">AI Engine v4.2</div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Processed in {isLoading ? "..." : "120ms"}</div>
+              <div className="text-[10px] text-violet-400 uppercase tracking-[0.2em] font-mono">
+                {isLoading ? (
+                  <motion.span
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  >
+                    Lat: <span className="text-zinc-400">OPTIMIZING...</span>
+                  </motion.span>
+                ) : (
+                  "Processed in 42ms"
+                )}
+              </div>
             </div>
           </div>
         )}

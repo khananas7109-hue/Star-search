@@ -2,35 +2,82 @@ import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { UploadSection } from './components/UploadSection';
 import { ProfileCard } from './components/ProfileCard';
+import { Auth } from './components/Auth';
 import { identifyCelebrity, type StarProfile } from './lib/gemini';
-import { Sparkles, Clock, Bookmark, X } from 'lucide-react';
+import { Sparkles, Clock, Bookmark, X, Target, Zap, Shield, Database } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
+  const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState<StarProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [history, setHistory] = useState<StarProfile[]>([]);
   const [bookmarks, setBookmarks] = useState<StarProfile[]>([]);
+  const [searchCount, setSearchCount] = useState(0);
+  
   const [showHistory, setShowHistory] = useState(false);
   const [showBookmarks, setShowBookmarks] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
 
-  // Load from local storage
+  // Load user from local storage
   useEffect(() => {
-    const savedHistory = localStorage.getItem('starsearch_history');
-    const savedBookmarks = localStorage.getItem('starsearch_bookmarks');
-    if (savedHistory) setHistory(JSON.parse(savedHistory));
-    if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
+    setIsMounted(true);
+    const currentUser = localStorage.getItem('ss_current_user');
+    if (currentUser) {
+      const parsedUser = JSON.parse(currentUser);
+      setUser(parsedUser);
+      loadUserData(parsedUser.email);
+    }
   }, []);
 
+  const loadUserData = (email: string) => {
+    const savedHistory = localStorage.getItem(`ss_history_${email}`);
+    const savedBookmarks = localStorage.getItem(`ss_bookmarks_${email}`);
+    const savedCount = localStorage.getItem(`ss_count_${email}`);
+    
+    if (savedHistory) setHistory(JSON.parse(savedHistory));
+    else setHistory([]);
+    
+    if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
+    else setBookmarks([]);
+    
+    if (savedCount) setSearchCount(parseInt(savedCount));
+    else setSearchCount(0);
+  };
+
+  const handleLogin = (userData: { name: string; email: string }) => {
+    setUser(userData);
+    loadUserData(userData.email);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('ss_current_user');
+    setUser(null);
+    setHistory([]);
+    setBookmarks([]);
+    setSearchCount(0);
+    setProfile(null);
+  };
+
+  const incrementSearchCount = (email: string) => {
+    const newCount = searchCount + 1;
+    setSearchCount(newCount);
+    localStorage.setItem(`ss_count_${email}`, newCount.toString());
+  };
+
   const saveHistory = (newProfile: StarProfile) => {
+    if (!user) return;
     const updatedHistory = [newProfile, ...history.filter(h => h.name !== newProfile.name)].slice(0, 10);
     setHistory(updatedHistory);
-    localStorage.setItem('starsearch_history', JSON.stringify(updatedHistory));
+    localStorage.setItem(`ss_history_${user.email}`, JSON.stringify(updatedHistory));
+    incrementSearchCount(user.email);
   };
 
   const toggleBookmark = (star: StarProfile) => {
+    if (!user) return;
     const isBookmarked = bookmarks.some(b => b.name === star.name);
     let updatedBookmarks;
     if (isBookmarked) {
@@ -39,8 +86,26 @@ export default function App() {
       updatedBookmarks = [star, ...bookmarks];
     }
     setBookmarks(updatedBookmarks);
-    localStorage.setItem('starsearch_bookmarks', JSON.stringify(updatedBookmarks));
+    localStorage.setItem(`ss_bookmarks_${user.email}`, JSON.stringify(updatedBookmarks));
   };
+
+  if (!isMounted) {
+    return (
+      <div className="h-screen w-screen bg-[#09090b] flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          className="text-[10px] text-violet-500 font-mono tracking-[0.5em] uppercase animate-pulse"
+        >
+          Initializing Scan Subroutines...
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Auth onLogin={handleLogin} />;
+  }
 
   const handleUpload = async (base64: string, mimeType: string) => {
     setIsLoading(true);
@@ -66,9 +131,12 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen w-screen p-8 max-w-[1400px] mx-auto overflow-hidden relative">
       <Header 
+        user={user}
         onHistoryClick={() => setShowHistory(true)} 
         onSavedClick={() => setShowBookmarks(true)} 
-        onUploadClick={() => setProfile(null)}
+        onUploadClick={() => { setProfile(null); setShowDashboard(false); }}
+        onLogout={handleLogout}
+        onDashboardClick={() => setShowDashboard(true)}
       />
       
       <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-8 items-start overflow-y-auto pr-2 custom-scrollbar pb-12">
@@ -76,28 +144,6 @@ export default function App() {
         <div className="md:col-span-4 lg:col-span-3 flex flex-col gap-6 sticky top-0">
           <UploadSection onUpload={handleUpload} isLoading={isLoading} />
           
-          {/* History/Bookmarks Toggle */}
-          <div className="grid grid-cols-2 gap-2">
-            <button 
-              onClick={() => setShowHistory(!showHistory)}
-              className={`flex items-center justify-center gap-2 p-4 rounded-2xl border transition-all ${
-                showHistory ? 'glass border-violet-500 text-violet-400' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'
-              }`}
-            >
-              <Clock className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-widest">History</span>
-            </button>
-            <button 
-              onClick={() => setShowBookmarks(!showBookmarks)}
-              className={`flex items-center justify-center gap-2 p-4 rounded-2xl border transition-all ${
-                showBookmarks ? 'glass border-violet-500 text-violet-400' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'
-              }`}
-            >
-              <Bookmark className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-widest">Saved</span>
-            </button>
-          </div>
-
           <AnimatePresence>
             {error && (
               <motion.div
@@ -117,7 +163,87 @@ export default function App() {
         {/* Results Pane */}
         <div className="md:col-span-8 lg:col-span-9 flex flex-col gap-6">
           <AnimatePresence mode="wait">
-            {profile ? (
+            {showDashboard ? (
+              <motion.div
+                key="dashboard"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full glass p-8 md:p-12 rounded-[2.5rem] flex flex-col gap-12 min-h-full"
+              >
+                <div className="flex justify-between items-end">
+                  <div className="space-y-4">
+                    <h2 className="text-4xl font-bold tracking-tight text-white flex items-center gap-4">
+                      Agent Terminal <Target className="w-8 h-8 text-violet-500" />
+                    </h2>
+                    <p className="text-zinc-500 text-sm uppercase tracking-[0.2em] font-mono">Registry Metadata Controller</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Authenticated Profile</span>
+                    <p className="text-lg text-violet-400 font-bold">{user.name}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div className="p-8 bg-white/[0.02] border border-white/5 rounded-3xl group hover:border-violet-500/30 transition-all">
+                    <Database className="w-6 h-6 text-violet-500 mb-6 group-hover:scale-110 transition-transform" />
+                    <span className="text-3xl font-bold text-white block mb-1">{searchCount}</span>
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Total Scans</span>
+                  </div>
+                  <div className="p-8 bg-white/[0.02] border border-white/5 rounded-3xl group hover:border-violet-500/30 transition-all">
+                    <Clock className="w-6 h-6 text-violet-500 mb-6 group-hover:scale-110 transition-transform" />
+                    <span className="text-3xl font-bold text-white block mb-1">{history.length}</span>
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Recent Logs</span>
+                  </div>
+                  <div className="p-8 bg-white/[0.02] border border-white/5 rounded-3xl group hover:border-violet-500/30 transition-all">
+                    <Bookmark className="w-6 h-6 text-violet-500 mb-6 group-hover:scale-110 transition-transform" />
+                    <span className="text-3xl font-bold text-white block mb-1">{bookmarks.length}</span>
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Secure Vault</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                  <div className="space-y-6">
+                    <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                       <Shield className="w-4 h-4 text-violet-400" /> System Integrity
+                    </h3>
+                    <div className="space-y-4">
+                       <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 flex justify-between items-center text-xs">
+                          <span className="text-zinc-400 uppercase tracking-widest">Protocol Version</span>
+                          <span className="text-violet-400 font-bold">v4.2.0-STABLE</span>
+                       </div>
+                       <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 flex justify-between items-center text-xs">
+                          <span className="text-zinc-400 uppercase tracking-widest">Data Encryption</span>
+                          <span className="text-green-500 font-bold">AEGIS-256 ACTIVE</span>
+                       </div>
+                    </div>
+                  </div>
+                  <div className="space-y-6">
+                    <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                       <Zap className="w-4 h-4 text-amber-500" /> Recent Identification
+                    </h3>
+                    {history.length > 0 ? (
+                      <div className="glass p-6 rounded-3xl border-white/5 flex items-center justify-between">
+                         <div>
+                            <h4 className="text-white font-bold">{history[0].name}</h4>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{history[0].profession}</p>
+                         </div>
+                         <button 
+                          onClick={() => { setProfile(history[0]); setShowDashboard(false); }}
+                          className="p-3 bg-violet-600 rounded-xl text-white shadow-lg shadow-violet-900/20 active:scale-95 transition-all text-[10px] font-bold uppercase"
+                         >
+                           View
+                         </button>
+                      </div>
+                    ) : (
+                      <div className="p-12 text-center border border-dashed border-white/10 rounded-3xl">
+                        <p className="text-[10px] text-zinc-600 uppercase tracking-widest">No target data available</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ) : profile ? (
               <ProfileCard 
                 profile={profile} 
                 isBookmarked={bookmarks.some(b => b.name === profile.name)}
@@ -150,7 +276,7 @@ export default function App() {
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            className="fixed inset-y-0 right-0 w-full sm:w-80 glass z-[60] p-8 border-l border-white/10 flex flex-col"
+            className="fixed inset-y-0 right-0 w-full sm:w-80 glass z-[160] p-8 border-l border-white/10 flex flex-col"
           >
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
@@ -169,7 +295,7 @@ export default function App() {
               {history.map((h, i) => (
                 <div 
                   key={i} 
-                  onClick={() => { setProfile(h); setShowHistory(false); }}
+                  onClick={() => { setProfile(h); setShowHistory(false); setShowDashboard(false); }}
                   className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:border-violet-500/30 hover:bg-violet-600/5 transition-all cursor-pointer group"
                 >
                   <h4 className="text-sm font-bold text-white group-hover:text-violet-300">{h.name}</h4>
@@ -185,7 +311,7 @@ export default function App() {
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            className="fixed inset-y-0 right-0 w-full sm:w-80 glass z-[60] p-8 border-l border-white/10 flex flex-col"
+            className="fixed inset-y-0 right-0 w-full sm:w-80 glass z-[160] p-8 border-l border-white/10 flex flex-col"
           >
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
@@ -204,7 +330,7 @@ export default function App() {
               {bookmarks.map((b, i) => (
                 <div 
                   key={i} 
-                  onClick={() => { setProfile(b); setShowBookmarks(false); }}
+                  onClick={() => { setProfile(b); setShowBookmarks(false); setShowDashboard(false); }}
                   className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:border-violet-500/30 hover:bg-violet-600/5 transition-all cursor-pointer group"
                 >
                   <h4 className="text-sm font-bold text-white group-hover:text-violet-300">{b.name}</h4>
