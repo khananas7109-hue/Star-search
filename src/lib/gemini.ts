@@ -3,9 +3,11 @@ import { fetchWikipediaData } from "../services/externalData";
 
 let genAI: GoogleGenAI | null = null;
 // ... (rest of the initial setup remains the same)
+const GEMINI_API_KEY = "AIzaSyDIWXRMcMN1-iUPNIImPD_UbwYOntrVBa8";
+
 function getAI() {
   if (!genAI) {
-    const key = process.env.GEMINI_API_KEY;
+    const key = GEMINI_API_KEY;
     if (!key) {
       throw new Error("Target identification module offline: GEMINI_API_KEY omitted.");
     }
