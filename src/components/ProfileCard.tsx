@@ -60,13 +60,13 @@ export function ProfileCard({ profile, isBookmarked, onToggleBookmark }: Profile
         className="absolute -bottom-24 -left-24 w-96 h-96 bg-violet-900/10 rounded-full blur-[100px] pointer-events-none" 
       />
       
-      <div className="relative">
+      <div className="relative w-full">
         {/* Header Actions */}
-        <div className="flex flex-wrap justify-end gap-2 mb-6">
+        <div className="flex flex-wrap justify-center sm:justify-end gap-2 mb-6 sm:mb-10">
           <button 
             onClick={copyLink}
             title="Copy Link"
-            className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-[#fafafa] hover:bg-zinc-700 transition-all active:scale-95 shadow-lg"
+            className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-[#fafafa] hover:bg-zinc-700 transition-all active:scale-95 shadow-lg shrink-0"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Link className="w-3.5 h-3.5 text-zinc-400" />}
             {copied ? 'Copied' : 'Link'}
@@ -113,22 +113,22 @@ export function ProfileCard({ profile, isBookmarked, onToggleBookmark }: Profile
         </div>
 
         {/* Identity Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-10">
-          <div className="space-y-1">
-            <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-[#fafafa] leading-none mb-2">{profile.name}</h2>
-            <p className="text-violet-400 font-medium text-xl uppercase tracking-wider">{profile.profession}</p>
-            <div className="flex flex-wrap gap-4 mt-6">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-xl border border-zinc-800">
-                <Calendar className="w-4 h-4 text-violet-500" />
-                <span className="text-xs text-zinc-300 font-medium">{profile.birthDate} ({profile.age} yrs)</span>
+        <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-10 w-full overflow-hidden">
+          <div className="space-y-3 w-full">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-[#fafafa] leading-tight break-words">{profile.name}</h2>
+            <p className="text-violet-400 font-medium text-lg sm:text-xl uppercase tracking-wider">{profile.profession}</p>
+            <div className="flex flex-wrap gap-2 sm:gap-4 mt-6">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-xl border border-zinc-800 shrink-0">
+                <Calendar className="w-3 h-3 sm:w-4 h-4 text-violet-500" />
+                <span className="text-[10px] sm:text-xs text-zinc-300 font-medium">{profile.birthDate} ({profile.age} yrs)</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-xl border border-zinc-800">
-                <DollarSign className="w-4 h-4 text-green-500" />
-                <span className="text-xs text-zinc-300 font-medium">{profile.netWorth}</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 rounded-xl border border-zinc-800 shrink-0">
+                <DollarSign className="w-3 h-3 sm:w-4 h-4 text-green-500" />
+                <span className="text-[10px] sm:text-xs text-zinc-300 font-medium">{profile.netWorth}</span>
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             {profile.socialMedia.instagram && (
               <a href={profile.socialMedia.instagram} target="_blank" className="w-12 h-12 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs text-zinc-300 hover:bg-violet-600 hover:border-violet-500 hover:text-white transition-all shadow-xl">
                 IG
@@ -143,11 +143,11 @@ export function ProfileCard({ profile, isBookmarked, onToggleBookmark }: Profile
         </div>
 
         {/* Bio */}
-        <div className="mb-12">
-          <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <div className="mb-12 w-full">
+          <h3 className="text-[10px] sm:text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
             <User className="w-3 h-3" /> Target Bio
           </h3>
-          <p className="text-zinc-300 leading-relaxed text-lg max-w-3xl font-light italic">
+          <p className="text-zinc-300 leading-relaxed text-base sm:text-lg max-w-3xl font-light italic break-words">
             "{profile.bio}"
           </p>
         </div>

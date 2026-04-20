@@ -25,6 +25,7 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
 
   // Load user from local storage
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function App() {
 
   const handleLogin = (userData: { name: string; email: string }) => {
     setUser(userData);
+    setShowAuth(false);
     loadUserData(userData.email);
   };
 
@@ -111,11 +113,13 @@ export default function App() {
     return <SplashScreen />;
   }
 
-  if (!user) {
-    return <Auth onLogin={handleLogin} />;
-  }
+  // Allow browsing without forced auth, but identification requires user
 
   const handleUpload = async (base64: string, mimeType: string) => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
     setIsLoading(true);
     setProfile(null);
     setError(null);
@@ -141,42 +145,50 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen p-8 max-w-[1400px] mx-auto overflow-hidden relative">
+    <div className="flex flex-col min-h-screen w-full p-4 md:p-8 max-w-[1400px] mx-auto relative">
       <Header 
         user={user}
-        onHistoryClick={() => setShowHistory(true)} 
-        onSavedClick={() => setShowBookmarks(true)} 
-        onUploadClick={() => { setProfile(null); setShowDashboard(false); }}
+        onHistoryClick={() => user ? setShowHistory(true) : setShowAuth(true)} 
+        onSavedClick={() => user ? setShowBookmarks(true) : setShowAuth(true)} 
+        onUploadClick={() => { setProfile(null); setShowDashboard(false); setShowAuth(false); }}
         onLogout={handleLogout}
-        onDashboardClick={() => setShowDashboard(true)}
+        onDashboardClick={() => user ? setShowDashboard(true) : setShowAuth(true)}
       />
       
-      <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-8 items-start overflow-y-auto pr-2 custom-scrollbar pb-12">
+      <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-4">
         {/* Interaction Pane */}
         <div className="md:col-span-4 lg:col-span-3 flex flex-col gap-6 sticky top-0">
-          <UploadSection onUpload={handleUpload} isLoading={isLoading} />
-          
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                className="glass p-4 rounded-2xl border-red-500/20 bg-red-500/5 flex flex-col gap-3"
-              >
-                <p className="text-xs text-red-100 font-medium text-center leading-relaxed">
-                  {error}
-                </p>
-                <button 
-                  onClick={() => setError(null)}
-                  className="flex items-center justify-center gap-2 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] uppercase font-bold tracking-widest text-zinc-400 transition-all active:scale-95"
-                >
-                  <RefreshCcw className="w-3 h-3" />
-                  Try Again
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {showAuth ? (
+            <div className="w-full">
+              <Auth onLogin={handleLogin} />
+            </div>
+          ) : (
+            <>
+              <UploadSection onUpload={handleUpload} isLoading={isLoading} />
+              
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="glass p-4 rounded-2xl border-red-500/20 bg-red-500/5 flex flex-col gap-3"
+                  >
+                    <p className="text-xs text-red-100 font-medium text-center leading-relaxed">
+                      {error}
+                    </p>
+                    <button 
+                      onClick={() => setError(null)}
+                      className="flex items-center justify-center gap-2 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] uppercase font-bold tracking-widest text-zinc-400 transition-all active:scale-95"
+                    >
+                      <RefreshCcw className="w-3 h-3" />
+                      Try Again
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
         </div>
 
         {/* Results Pane */}
@@ -373,16 +385,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <footer className="mt-auto flex justify-between border-t border-zinc-800 pt-4 text-[10px] text-zinc-600 uppercase tracking-[0.2em] font-medium">
-        <div>&copy; 2026 StarSearch Artificial Vision</div>
-        <div className="flex gap-4">
-          <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-            System Status: Operational
-          </span>
-          <span>v4.2.0-stable</span>
-        </div>
-      </footer>
+      {/* Removed footer for clean minimal look */}
     </div>
   );
 }

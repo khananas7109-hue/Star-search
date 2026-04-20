@@ -141,11 +141,17 @@ export async function identifyCelebrity(base64Image: string, mimeType: string): 
 
     // Enhancement: Fetch real Wikipedia data
     const wikiData = await fetchWikipediaData(profile.name);
-    if (wikiData && wikiData.extract) {
-      profile.bio = wikiData.extract;
-      profile.source = "Wikipedia";
-      if (wikiData.description && !profile.profession) {
+    if (wikiData) {
+      if (wikiData.extract && wikiData.extract.length > 50) {
+        profile.bio = wikiData.extract;
+        profile.source = "Wikipedia";
+      }
+      if (wikiData.description) {
         profile.profession = wikiData.description;
+      }
+      // Normalize name to Wikipedia title if possible
+      if (wikiData.title) {
+        profile.name = wikiData.title;
       }
     }
 

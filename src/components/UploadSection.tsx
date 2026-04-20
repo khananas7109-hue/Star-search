@@ -110,7 +110,7 @@ export function UploadSection({ onUpload, isLoading }: UploadSectionProps) {
             onDragLeave={onDragLeave}
             onDrop={onDrop}
             className={cn(
-              "relative group aspect-[4/5] rounded-3xl border-2 border-dashed transition-all duration-500 overflow-hidden glass glow flex flex-col items-center justify-center p-8",
+              "relative group w-full aspect-[4/5] rounded-3xl border-2 border-dashed transition-all duration-500 overflow-hidden glass glow flex flex-col items-center justify-center p-4 sm:p-8",
               isDragging 
                 ? "border-violet-500 bg-violet-500/5 shadow-[0_0_20px_rgba(139,92,246,0.2)]" 
                 : "border-white/10 hover:border-violet-500/30"
@@ -126,9 +126,9 @@ export function UploadSection({ onUpload, isLoading }: UploadSectionProps) {
             <div className="p-5 bg-violet-600/10 rounded-2xl ring-1 ring-violet-500/20 group-hover:ring-violet-500/40 transition-all mb-6">
               <Upload className="w-8 h-8 text-violet-400 group-hover:scale-110 transition-all" />
             </div>
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold text-white mb-2">Initialize Scanner</h3>
-              <p className="text-xs text-zinc-400 uppercase tracking-widest leading-relaxed">
+            <div className="text-center mb-6 w-full px-2">
+              <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 truncate">Initialize Scanner</h3>
+              <p className="text-[10px] sm:text-xs text-zinc-400 uppercase tracking-widest leading-relaxed line-clamp-2">
                 Upload Target Metadata
               </p>
             </div>
@@ -142,7 +142,7 @@ export function UploadSection({ onUpload, isLoading }: UploadSectionProps) {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="relative rounded-3xl overflow-hidden aspect-[4/5] glass glow group"
+              className="relative rounded-3xl overflow-hidden aspect-[4/5] glass glow group w-full"
             >
               <img 
                 src={preview} 
