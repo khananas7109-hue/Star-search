@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-violet-50: #f5f3ff;
+  --color-violet-100: #ede9fe;
+  --color-violet-200: #ddd6fe;
+  --color-violet-300: #c4b5fd;
+  --color-violet-400: #a786f9;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #7c3aed;
+  --color-violet-700: #6d28d9;
+  --color-violet-800: #5b21b6;
+  --color-violet-900: #4c1d95;
+  --color-violet-950: #2e1065;
+}
+
+@layer components {
+  .glass {
+    background: rgba(24, 24, 27, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(63, 63, 70, 0.5);
+  }
+
+  .glow {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  .scanline {
+    @apply absolute left-0 w-full h-[2px] bg-violet-500 opacity-80;
+    box-shadow: 0 0 15px #8b5cf6;
+    animation: scan 3s linear infinite;
+  }
+
+  .stat-badge {
+    @apply bg-violet-500/10 border border-violet-500/20 text-violet-300 px-2 py-0.5 rounded text-[0.7rem] uppercase tracking-wider font-medium;
+  }
+}
+
+@keyframes scan {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+
+@layer base {
+  body {
+    @apply bg-[#09090b] text-[#fafafa] antialiased selection:bg-violet-500/30;
+  }
+}
+
+
