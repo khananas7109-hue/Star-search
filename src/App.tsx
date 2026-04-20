@@ -1,14 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Header } from './components/Header';
 import { UploadSection } from './components/UploadSection';
-import { ProfileCard } from './components/ProfileCard';
 import { Auth } from './components/Auth';
+import { SplashScreen } from './components/SplashScreen';
 import { identifyCelebrity, type StarProfile } from './lib/gemini';
-import { Sparkles, Clock, Bookmark, X, Target, Zap, Shield, Database } from 'lucide-react';
+import { Sparkles, Clock, Bookmark, X, Target, Zap, Shield, Database, RefreshCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+// Lazy load heavy components
+const ProfileCard = lazy(() => import('./components/ProfileCard').then(m => ({ default: m.ProfileCard })));
 
 export default function App() {
   const [isMounted, setIsMounted] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState<StarProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,12 +29,24 @@ export default function App() {
   // Load user from local storage
   useEffect(() => {
     setIsMounted(true);
+    
+    // Simulate initial system check
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500);
+
     const currentUser = localStorage.getItem('ss_current_user');
     if (currentUser) {
-      const parsedUser = JSON.parse(currentUser);
-      setUser(parsedUser);
-      loadUserData(parsedUser.email);
+      try {
+        const parsedUser = JSON.parse(currentUser);
+        setUser(parsedUser);
+        loadUserData(parsedUser.email);
+      } catch (e) {
+        localStorage.removeItem('ss_current_user');
+      }
     }
+
+    return () => clearTimeout(timer);
   }, []);
 
   const loadUserData = (email: string) => {
@@ -89,18 +105,10 @@ export default function App() {
     localStorage.setItem(`ss_bookmarks_${user.email}`, JSON.stringify(updatedBookmarks));
   };
 
-  if (!isMounted) {
-    return (
-      <div className="h-screen w-screen bg-[#09090b] flex items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
-          className="text-[10px] text-violet-500 font-mono tracking-[0.5em] uppercase animate-pulse"
-        >
-          Initializing Scan Subroutines...
-        </motion.div>
-      </div>
-    );
+  if (!isMounted) return null;
+
+  if (showSplash) {
+    return <SplashScreen />;
   }
 
   if (!user) {
@@ -114,14 +122,18 @@ export default function App() {
     
     try {
       const result = await identifyCelebrity(base64, mimeType);
-      if (result && result.name !== 'Unknown') {
+      if (result) {
         setProfile(result);
         saveHistory(result);
       } else {
         setError("Identification failed. Please ensure the person is a public figure and the photo is clear.");
       }
-    } catch (err) {
-      setError("System override: data processing error.");
+    } catch (err: any) {
+      if (err.message) {
+        setError(err.message);
+      } else {
+        setError("System override: data processing error.");
+      }
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -150,11 +162,18 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="glass p-4 rounded-2xl border-red-500/20 bg-red-500/5"
+                className="glass p-4 rounded-2xl border-red-500/20 bg-red-500/5 flex flex-col gap-3"
               >
-                <p className="text-xs text-red-400 font-mono uppercase tracking-widest text-center">
+                <p className="text-xs text-red-100 font-medium text-center leading-relaxed">
                   {error}
                 </p>
+                <button 
+                  onClick={() => setError(null)}
+                  className="flex items-center justify-center gap-2 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] uppercase font-bold tracking-widest text-zinc-400 transition-all active:scale-95"
+                >
+                  <RefreshCcw className="w-3 h-3" />
+                  Try Again
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -244,11 +263,23 @@ export default function App() {
                 </div>
               </motion.div>
             ) : profile ? (
-              <ProfileCard 
-                profile={profile} 
-                isBookmarked={bookmarks.some(b => b.name === profile.name)}
-                onToggleBookmark={toggleBookmark}
-              />
+              <Suspense fallback={
+                <div className="w-full glass p-12 rounded-[2rem] animate-pulse flex flex-col gap-8 min-h-[600px]">
+                  <div className="h-12 w-1/2 bg-white/5 rounded-2xl" />
+                  <div className="h-6 w-1/4 bg-white/5 rounded-2xl" />
+                  <div className="grid grid-cols-2 gap-8 mt-12">
+                    <div className="h-40 bg-white/5 rounded-3xl" />
+                    <div className="h-40 bg-white/5 rounded-3xl" />
+                  </div>
+                  <div className="h-64 bg-white/5 rounded-3xl" />
+                </div>
+              }>
+                <ProfileCard 
+                  profile={profile} 
+                  isBookmarked={bookmarks.some(b => b.name === profile.name)}
+                  onToggleBookmark={toggleBookmark}
+                />
+              </Suspense>
             ) : (
               <motion.div 
                 initial={{ opacity: 0 }}

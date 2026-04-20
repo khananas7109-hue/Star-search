@@ -1,5 +1,6 @@
-import { Instagram, Twitter, Globe, Zap, Newspaper, User, Share2, Bookmark, BookmarkCheck, Heart, Calendar, DollarSign, Film, Music, Lightbulb } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Instagram, Twitter, Globe, Zap, Newspaper, User, Share2, Bookmark, BookmarkCheck, Heart, Calendar, DollarSign, Film, Music, Lightbulb, Facebook, Link, Check, Send } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'motion/react';
+import { useRef, useState } from 'react';
 import type { StarProfile } from '../lib/gemini';
 
 interface ProfileCardProps {
@@ -9,29 +10,95 @@ interface ProfileCardProps {
 }
 
 export function ProfileCard({ profile, isBookmarked, onToggleBookmark }: ProfileCardProps) {
+  const [copied, setCopied] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const shareUrl = window.location.href;
+  const shareText = `Check out ${profile.name}'s profile on StarSearch!`;
+
   const shareOnWhatsApp = () => {
-    const text = `Check out ${profile.name}'s profile on StarSearch! ${window.location.href}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, '_blank');
   };
+
+  const shareOnTwitter = () => {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+  };
+
+  const shareOnFacebook = () => {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
+  };
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+
+  const y1 = useTransform(scrollYProgress, [0, 1], [0, -100]);
+  const y2 = useTransform(scrollYProgress, [0, 1], [0, 100]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.5, 1, 1, 0.5]);
 
   return (
     <motion.div
+      ref={containerRef}
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       className="w-full glass p-8 md:p-12 rounded-[2rem] relative overflow-hidden flex flex-col gap-8 shadow-2xl"
     >
-      <div className="absolute -top-24 -right-24 w-64 h-64 bg-violet-600/10 rounded-full blur-[80px] pointer-events-none" />
+      <motion.div 
+        style={{ y: y1, opacity }}
+        className="absolute -top-24 -right-24 w-64 h-64 bg-violet-600/10 rounded-full blur-[80px] pointer-events-none" 
+      />
+      
+      <motion.div 
+        style={{ y: y2 }}
+        className="absolute -bottom-24 -left-24 w-96 h-96 bg-violet-900/10 rounded-full blur-[100px] pointer-events-none" 
+      />
       
       <div className="relative">
         {/* Header Actions */}
-        <div className="flex justify-end gap-3 mb-6">
+        <div className="flex flex-wrap justify-end gap-2 mb-6">
+          <button 
+            onClick={copyLink}
+            title="Copy Link"
+            className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-[#fafafa] hover:bg-zinc-700 transition-all active:scale-95 shadow-lg"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Link className="w-3.5 h-3.5 text-zinc-400" />}
+            {copied ? 'Copied' : 'Link'}
+          </button>
+          
           <button 
             onClick={shareOnWhatsApp}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold uppercase tracking-widest text-[#fafafa] hover:bg-violet-600 transition-all active:scale-95 shadow-lg shadow-black/20"
+            title="Share on WhatsApp"
+            className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-[#fafafa] hover:bg-green-600 transition-all active:scale-95 shadow-lg"
           >
-            <Share2 className="w-4 h-4" />
-            Share
+            <Send className="w-3.5 h-3.5" />
+            WA
           </button>
+
+          <button 
+            onClick={shareOnTwitter}
+            title="Share on Twitter"
+            className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-[#fafafa] hover:bg-sky-500 transition-all active:scale-95 shadow-lg"
+          >
+            <Twitter className="w-3.5 h-3.5" />
+            TW
+          </button>
+
+          <button 
+            onClick={shareOnFacebook}
+            title="Share on Facebook"
+            className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-[#fafafa] hover:bg-blue-600 transition-all active:scale-95 shadow-lg"
+          >
+            <Facebook className="w-3.5 h-3.5" />
+            FB
+          </button>
+
           <button 
             onClick={() => onToggleBookmark(profile)}
             className={`flex items-center gap-2 px-4 py-2 border rounded-xl text-xs font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-black/20 ${
@@ -157,7 +224,7 @@ export function ProfileCard({ profile, isBookmarked, onToggleBookmark }: Profile
         </div>
 
         {/* News Intel */}
-        <div className="border-t border-zinc-800 pt-8">
+        <div className="border-t border-zinc-800 pt-8 relative">
           <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-8 px-4">Recent Media Intel</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {profile.recentNews.map((news, i) => (
@@ -173,6 +240,15 @@ export function ProfileCard({ profile, isBookmarked, onToggleBookmark }: Profile
               </div>
             ))}
           </div>
+
+          {profile.source && (
+            <div className="mt-12 pt-6 border-t border-white/5 flex justify-between items-center text-[10px] text-zinc-600 uppercase tracking-widest font-bold">
+              <span>Data Integrity: High</span>
+              <span className="flex items-center gap-2">
+                Source: <span className="text-violet-500">{profile.source}</span>
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
