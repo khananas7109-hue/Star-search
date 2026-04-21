@@ -119,7 +119,7 @@ export default function App() {
 
   // Allow browsing without forced auth, but identification requires user
 
-  const handleSearch = async (name: string) => {
+  const handleSearch = async (name: string, uploadedImage?: string | null) => {
     if (!user) {
       setShowAuth(true);
       return;
@@ -131,8 +131,13 @@ export default function App() {
     try {
       const result = await identificationByName(name);
       if (result) {
-        setProfile(result);
-        saveHistory(result);
+        // Use the uploaded image as the profile picture if provided
+        const finalProfile = {
+          ...result,
+          thumbnail: uploadedImage || result.thumbnail
+        };
+        setProfile(finalProfile);
+        saveHistory(finalProfile);
       } else {
         setError(`Target not found in Wikipedia Registry. Please ensure the name "${name}" is correct.`);
       }

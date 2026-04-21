@@ -8,30 +8,62 @@ export interface WikipediaData {
   description?: string;
   title: string;
   displaytitle: string;
+  related?: any[];
+  fullText?: string;
 }
 
 export async function fetchWikipediaData(name: string): Promise<WikipediaData | null> {
   try {
-    // Try primary search first to handle name variations
-    const searchResponse = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(name)}&format=json&origin=*`);
-    const searchData = await searchResponse.json();
+    // 1. Search for the most relevant page title
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(name)}&format=json&origin=*&srlimit=1`;
+    const searchRes = await fetch(searchUrl);
+    const searchData = await searchRes.json();
     
-    let targetTitle = name;
-    if (searchData.query?.search?.length > 0) {
-      targetTitle = searchData.query.search[0].title;
+    if (!searchData.query?.search || searchData.query.search.length === 0) {
+      return null;
     }
 
-    // Use the Summary endpoint for basic info with the corrected title
-    const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(targetTitle.replace(/\s+/g, '_'))}`);
-    if (!response.ok) return null;
+    const targetTitle = searchData.query.search[0].title;
+
+    // 2. Fetch Summary and Thumbnail using Action API (CORS friendly with origin=*)
+    // prop=extracts (sentences) + prop=pageimages (thumbnail)
+    const summaryUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|description&exintro&explaintext&redirects=1&titles=${encodeURIComponent(targetTitle)}&format=json&origin=*&pithumbsize=500`;
+    const summaryRes = await fetch(summaryUrl);
+    const summaryData = await summaryRes.json();
     
-    const data = await response.json();
+    const pages = summaryData.query?.pages;
+    if (!pages) return null;
+    
+    const pageId = Object.keys(pages)[0];
+    if (pageId === "-1") return null;
+    
+    const page = pages[pageId];
+
+    // 3. Fetch Related (using Action API search with category/related logic fallback)
+    // Wikipedia REST API related is sometimes blocked, we'll search for pages with similar titles or categories
+    const relatedUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=morelike:${encodeURIComponent(targetTitle)}&format=json&origin=*&srlimit=4`;
+    const relatedRes = await fetch(relatedUrl);
+    const relatedSearchData = await relatedRes.json();
+    const relatedPages = (relatedSearchData.query?.search || []).map((p: any) => ({
+      title: p.title,
+      description: "Related Personality"
+    }));
+
+    // 4. Fetch Full Text (already using Action API)
+    const fullTextRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${encodeURIComponent(targetTitle)}&explaintext=1&format=json&origin=*&redirects=1`);
+    const fullTextData = await fullTextRes.json();
+    const fullPages = fullTextData.query?.pages;
+    const fullPageId = fullPages ? Object.keys(fullPages)[0] : null;
+    const fullText = fullPageId && fullPageId !== "-1" ? fullPages[fullPageId].extract : "";
+
     return {
-      extract: data.extract,
-      thumbnail: data.thumbnail?.source,
-      description: data.description,
-      title: data.title,
-      displaytitle: data.displaytitle
+      extract: page.extract || "",
+      thumbnail: page.thumbnail?.source,
+      description: page.description,
+      title: page.title,
+      displaytitle: page.title,
+      related: relatedPages,
+      fullText: fullText
     };
   } catch (error) {
     console.error("Wikipedia API error:", error);
