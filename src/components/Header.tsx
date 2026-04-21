@@ -11,7 +11,7 @@ interface HeaderProps {
 
 export function Header({ user, onHistoryClick, onSavedClick, onUploadClick, onLogout, onDashboardClick }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between mb-8">
+    <header className="fixed top-0 left-0 right-0 z-[100] glass px-4 py-3 sm:px-8 sm:py-4 flex items-center justify-between border-b border-white/5">
       <div className="flex items-center gap-4">
         <button 
           onClick={onUploadClick}
@@ -30,9 +30,10 @@ export function Header({ user, onHistoryClick, onSavedClick, onUploadClick, onLo
         <div className="flex items-center gap-2 sm:gap-4">
           <button 
             onClick={onDashboardClick}
-            className="flex items-center gap-3 p-1 rounded-full hover:bg-white/5 transition-all text-left"
+            className="flex items-center gap-3 p-1 rounded-full hover:bg-white/5 transition-all text-left group"
+            title={user ? `Logged in as ${user.name}` : "Login / Signup"}
           >
-             <div className="w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0">
+             <div className="w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0 group-hover:border-violet-500 transition-all">
                <UserIcon className="w-4 h-4" />
              </div>
              {user && (

@@ -44,6 +44,9 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-[#09090b] text-[#fafafa] antialiased selection:bg-violet-500/30 overflow-x-hidden;
   }

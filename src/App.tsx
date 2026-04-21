@@ -145,25 +145,25 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen w-full p-4 md:p-8 max-w-[1400px] mx-auto relative">
+    <div className="flex flex-col min-h-screen w-full max-w-[1400px] mx-auto relative pt-20 sm:pt-24 px-4 md:px-8">
       <Header 
         user={user}
         onHistoryClick={() => user ? setShowHistory(true) : setShowAuth(true)} 
         onSavedClick={() => user ? setShowBookmarks(true) : setShowAuth(true)} 
-        onUploadClick={() => { setProfile(null); setShowDashboard(false); setShowAuth(false); }}
+        onUploadClick={() => { setProfile(null); setShowDashboard(false); setShowAuth(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
         onLogout={handleLogout}
         onDashboardClick={() => user ? setShowDashboard(true) : setShowAuth(true)}
       />
       
-      <main className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-4">
-        {/* Interaction Pane */}
-        <div className="md:col-span-4 lg:col-span-3 flex flex-col gap-6 sticky top-0">
+      <main className="flex-1 flex flex-col gap-8 pb-12 w-full max-w-5xl mx-auto">
+        {/* Top Section: Upload / Auth */}
+        <div className="w-full">
           {showAuth ? (
-            <div className="w-full">
+            <div className="w-full py-8">
               <Auth onLogin={handleLogin} />
             </div>
           ) : (
-            <>
+            <div className="w-full max-w-xl mx-auto">
               <UploadSection onUpload={handleUpload} isLoading={isLoading} />
               
               <AnimatePresence>
@@ -172,7 +172,7 @@ export default function App() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
-                    className="glass p-4 rounded-2xl border-red-500/20 bg-red-500/5 flex flex-col gap-3"
+                    className="glass p-4 rounded-2xl border-red-500/20 bg-red-500/5 flex flex-col gap-3 mt-6"
                   >
                     <p className="text-xs text-red-100 font-medium text-center leading-relaxed">
                       {error}
@@ -187,31 +187,31 @@ export default function App() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </>
+            </div>
           )}
         </div>
 
-        {/* Results Pane */}
-        <div className="md:col-span-8 lg:col-span-9 flex flex-col gap-6">
+        {/* Bottom Section: Results / Dashboard */}
+        <div className="w-full">
           <AnimatePresence mode="wait">
             {showDashboard ? (
               <motion.div
                 key="dashboard"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="w-full glass p-8 md:p-12 rounded-[2.5rem] flex flex-col gap-12 min-h-full"
+                className="w-full glass p-8 md:p-12 rounded-[2.5rem] flex flex-col gap-12"
               >
-                <div className="flex justify-between items-end">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
                   <div className="space-y-4">
-                    <h2 className="text-4xl font-bold tracking-tight text-white flex items-center gap-4">
+                    <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white flex items-center gap-4">
                       Agent Terminal <Target className="w-8 h-8 text-violet-500" />
                     </h2>
                     <p className="text-zinc-500 text-sm uppercase tracking-[0.2em] font-mono">Registry Metadata Controller</p>
                   </div>
-                  <div className="text-right">
+                  <div className="sm:text-right">
                     <span className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Authenticated Profile</span>
-                    <p className="text-lg text-violet-400 font-bold">{user.name}</p>
+                    <p className="text-lg text-violet-400 font-bold break-all">{user?.name}</p>
                   </div>
                 </div>
 
@@ -254,14 +254,14 @@ export default function App() {
                        <Zap className="w-4 h-4 text-amber-500" /> Recent Identification
                     </h3>
                     {history.length > 0 ? (
-                      <div className="glass p-6 rounded-3xl border-white/5 flex items-center justify-between">
-                         <div>
-                            <h4 className="text-white font-bold">{history[0].name}</h4>
-                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{history[0].profession}</p>
+                      <div className="glass p-6 rounded-3xl border-white/5 flex items-center justify-between gap-4">
+                         <div className="min-w-0">
+                            <h4 className="text-white font-bold truncate">{history[0].name}</h4>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest truncate">{history[0].profession}</p>
                          </div>
                          <button 
-                          onClick={() => { setProfile(history[0]); setShowDashboard(false); }}
-                          className="p-3 bg-violet-600 rounded-xl text-white shadow-lg shadow-violet-900/20 active:scale-95 transition-all text-[10px] font-bold uppercase"
+                          onClick={() => { setProfile(history[0]); setShowDashboard(false); window.scrollTo({ top: 400, behavior: 'smooth' }); }}
+                          className="p-3 bg-violet-600 rounded-xl text-white shadow-lg shadow-violet-900/20 active:scale-95 transition-all text-[10px] font-bold uppercase shrink-0"
                          >
                            View
                          </button>
@@ -296,13 +296,13 @@ export default function App() {
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="glass rounded-[2rem] min-h-[500px] flex flex-col items-center justify-center p-12 text-center relative overflow-hidden"
+                className="glass rounded-[2rem] min-h-[400px] flex flex-col items-center justify-center p-8 sm:p-12 text-center relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-violet-600/5 blur-[100px] -z-10" />
                 <div className="w-16 h-16 bg-violet-600/5 rounded-full flex items-center justify-center mb-6 ring-1 ring-violet-500/10">
                   <Sparkles className="w-6 h-6 text-violet-500/40" />
                 </div>
-                <h2 className="text-2xl font-bold tracking-tight text-white/80 mb-2 font-sans italic">Registry Awaiting Data</h2>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white/80 mb-2 font-sans italic">Registry Awaiting Data</h2>
                 <p className="text-zinc-500 text-sm max-w-sm font-light leading-relaxed">
                   Awaiting visual target metadata. Upload a photo or select an entry from history to initialize identification.
                 </p>

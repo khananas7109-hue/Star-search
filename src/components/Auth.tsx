@@ -46,13 +46,13 @@ export function Auth({ onLogin }: AuthProps) {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[#09090b] z-[100] p-4 overflow-y-auto">
+    <div className="w-full flex items-center justify-center p-4 min-h-[60vh] relative">
       <div className="absolute inset-0 bg-violet-600/5 blur-[120px] pointer-events-none" />
       
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
         <div className="text-center mb-10">
           <div className="w-16 h-16 bg-violet-600 rounded-2xl mx-auto flex items-center justify-center font-bold text-3xl text-white mb-6 shadow-2xl shadow-violet-900/40">
