@@ -1,4 +1,4 @@
-import { Instagram, Twitter, Globe, Zap, Newspaper, User, Share2, Bookmark, BookmarkCheck, Heart, Calendar, DollarSign, Film, Music, Lightbulb, Facebook, Link, Check, Send } from 'lucide-react';
+import { Instagram, Twitter, User, Bookmark, BookmarkCheck, Calendar, DollarSign, Film, Music, Lightbulb, Facebook, Link, Check, Send, Zap } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { useRef, useState } from 'react';
 import type { StarProfile } from '../lib/gemini';
@@ -130,13 +130,13 @@ export function ProfileCard({ profile, isBookmarked, onToggleBookmark }: Profile
           </div>
           <div className="flex gap-2 shrink-0">
             {profile.socialMedia.instagram && (
-              <a href={profile.socialMedia.instagram} target="_blank" className="w-12 h-12 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs text-zinc-300 hover:bg-violet-600 hover:border-violet-500 hover:text-white transition-all shadow-xl">
-                IG
+              <a href={profile.socialMedia.instagram} target="_blank" className="w-12 h-12 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 hover:bg-violet-600 hover:border-violet-500 hover:text-white transition-all shadow-xl">
+                <Instagram className="w-5 h-5" />
               </a>
             )}
             {profile.socialMedia.twitter && (
-              <a href={profile.socialMedia.twitter} target="_blank" className="w-12 h-12 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs text-zinc-300 hover:bg-violet-600 hover:border-violet-500 hover:text-white transition-all shadow-xl">
-                TW
+              <a href={profile.socialMedia.twitter} target="_blank" className="w-12 h-12 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 hover:bg-violet-600 hover:border-violet-500 hover:text-white transition-all shadow-xl">
+                <Twitter className="w-5 h-5" />
               </a>
             )}
           </div>

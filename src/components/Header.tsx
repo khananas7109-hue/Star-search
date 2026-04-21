@@ -1,4 +1,4 @@
-import { History, Upload, Bookmark, LogOut, User as UserIcon, Target } from 'lucide-react';
+import { History, Bookmark, LogOut, User as UserIcon } from 'lucide-react';
 
 interface HeaderProps {
   user: { name: string; email: string } | null;
