@@ -1,7 +1,7 @@
 import { Instagram, Twitter, User, Bookmark, BookmarkCheck, Calendar, DollarSign, Film, Music, Lightbulb, Facebook, Link, Check, Send, Zap } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { useRef, useState } from 'react';
-import type { StarProfile } from '../lib/gemini';
+import type { StarProfile } from '../services/identification';
 
 interface ProfileCardProps {
   profile: StarProfile;

@@ -3,8 +3,8 @@ import { Header } from './components/Header';
 import { UploadSection } from './components/UploadSection';
 import { Auth } from './components/Auth';
 import { SplashScreen } from './components/SplashScreen';
-import { identifyCelebrity, type StarProfile } from './lib/gemini';
-import { Sparkles, Clock, Bookmark, X, Target, Zap, Shield, Database, RefreshCcw } from 'lucide-react';
+import { identificationByName, type StarProfile } from './services/identification';
+import { Sparkles, Clock, Bookmark, X, Target, Zap, Shield, Database, RefreshCcw, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Lazy load heavy components
@@ -43,6 +43,7 @@ export default function App() {
         if (parsedUser && parsedUser.email) {
           setUser(parsedUser);
           loadUserData(parsedUser.email);
+          console.log("Registry: Session Restored for", parsedUser.name);
         }
       } catch (e) {
         console.error("Session restoration failed:", e);
@@ -118,7 +119,7 @@ export default function App() {
 
   // Allow browsing without forced auth, but identification requires user
 
-  const handleUpload = async (base64: string, mimeType: string) => {
+  const handleSearch = async (name: string) => {
     if (!user) {
       setShowAuth(true);
       return;
@@ -128,19 +129,15 @@ export default function App() {
     setError(null);
     
     try {
-      const result = await identifyCelebrity(base64, mimeType);
+      const result = await identificationByName(name);
       if (result) {
         setProfile(result);
         saveHistory(result);
       } else {
-        setError("Identification failed. Please ensure the person is a public figure and the photo is clear.");
+        setError(`Target not found in Wikipedia Registry. Please ensure the name "${name}" is correct.`);
       }
     } catch (err: any) {
-      if (err.message) {
-        setError(err.message);
-      } else {
-        setError("System override: data processing error.");
-      }
+      setError("Registry Link Error: Could not synchronize with Wikipedia.");
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -166,8 +163,8 @@ export default function App() {
               <Auth onLogin={handleLogin} />
             </div>
           ) : (
-            <div className="w-full max-w-xl mx-auto">
-              <UploadSection onUpload={handleUpload} isLoading={isLoading} />
+            <div className="w-full max-w-4xl mx-auto">
+              <UploadSection onSearch={handleSearch} isLoading={isLoading} />
               
               <AnimatePresence>
                 {error && (
@@ -212,9 +209,16 @@ export default function App() {
                     </h2>
                     <p className="text-zinc-500 text-sm uppercase tracking-[0.2em] font-mono">Registry Metadata Controller</p>
                   </div>
-                  <div className="sm:text-right">
+                  <div className="sm:text-right flex flex-col items-start sm:items-end gap-2">
                     <span className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Authenticated Profile</span>
                     <p className="text-lg text-violet-400 font-bold break-all">{user?.name}</p>
+                    <button 
+                      onClick={handleLogout}
+                      className="mt-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-widest rounded-xl border border-red-500/20 transition-all flex items-center gap-2"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      Terminate Session
+                    </button>
                   </div>
                 </div>
 
