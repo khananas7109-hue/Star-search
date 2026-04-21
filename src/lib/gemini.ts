@@ -8,9 +8,6 @@ const GEMINI_API_KEY = "AIzaSyDIWXRMcMN1-iUPNIImPD_UbwYOntrVBa8";
 function getAI() {
   if (!genAI) {
     const key = GEMINI_API_KEY;
-    if (!key) {
-      throw new Error("Target identification module offline: GEMINI_API_KEY omitted.");
-    }
     genAI = new GoogleGenAI({ apiKey: key });
   }
   return genAI;
@@ -54,7 +51,7 @@ export async function identifyCelebrity(base64Image: string, mimeType: string): 
                 },
               },
               {
-                text: "Act as a world-class celebrity identification expert. Identify the person in the image. Provide a comprehensive profile in JSON. Crucially, find their verified Instagram/Twitter handles and current estimated net worth. If identified, return the full name correctly so I can fetch their Wikipedia bio.",
+                text: "Analyze the image and identify the celebrity. Return a JSON profile. Focus on getting the correct full name so I can fetch their Wikipedia data. Also include their occupation, age, birth date, estimated net worth, top career highlights, notable works, 3 fun facts, and verified social media handles (Instagram/Twitter).",
               },
             ],
           },
