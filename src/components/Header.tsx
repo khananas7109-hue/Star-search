@@ -37,9 +37,9 @@ export function Header({ user, onHistoryClick, onSavedClick, onUploadClick, onLo
                <UserIcon className="w-4 h-4" />
              </div>
              {user && (
-               <div className="hidden sm:flex flex-col">
+               <div className="flex flex-col">
                  <span className="text-[9px] text-zinc-500 uppercase tracking-widest leading-none mb-1">Active</span>
-                 <span className="text-xs text-white font-bold leading-none truncate max-w-[80px]">{user.name}</span>
+                 <span className="text-xs text-white font-bold leading-none truncate max-w-[60px] sm:max-w-[100px]">{user.name}</span>
                </div>
              )}
           </button>

@@ -40,7 +40,7 @@ export async function identifyCelebrity(base64Image: string, mimeType: string): 
     
     try {
       response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash-latest",
         contents: [
           {
             parts: [

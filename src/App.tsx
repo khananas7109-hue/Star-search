@@ -40,9 +40,12 @@ export default function App() {
     if (currentUser) {
       try {
         const parsedUser = JSON.parse(currentUser);
-        setUser(parsedUser);
-        loadUserData(parsedUser.email);
+        if (parsedUser && parsedUser.email) {
+          setUser(parsedUser);
+          loadUserData(parsedUser.email);
+        }
       } catch (e) {
+        console.error("Session restoration failed:", e);
         localStorage.removeItem('ss_current_user');
       }
     }
